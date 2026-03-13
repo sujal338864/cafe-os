@@ -109,15 +109,15 @@ router.post(
       for (const item of items) {
         const product = await prisma.product.findUnique({ where: { id: item.productId } });
         if (product && product.stock <= product.lowStockAlert) {
-          await prisma.notification.create({
-            data: {
-              shopId: req.user!.shopId,
-              type: 'LOW_STOCK',
-              title: 'Low Stock Alert',
-              message: `${product.name} is running low (${product.stock} left)`,
-              metadata: { productId: product.id }
-            }
-          });
+          // await prisma.notification.create({
+          //   data: {
+          //     shopId: req.user!.shopId,
+          //     type: 'LOW_STOCK',
+          //     title: 'Low Stock Alert',
+          //     message: `${product.name} is running low (${product.stock} left)`,
+          //     metadata: { productId: product.id }
+          //   }
+          // });
         }
       }
     } catch (e) {
