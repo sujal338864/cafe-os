@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export type ThemeName = 'dark' | 'light' | 'purple' | 'ocean';
@@ -9,7 +9,7 @@ export interface ThemeTokens {
   sidebar:     string;
   card:        string;
   input:       string;
-  inputBg:     string;   // alias of input
+  inputBg:     string;
   border:      string;
   text:        string;
   textMuted:   string;
@@ -84,11 +84,11 @@ export const THEMES: Record<ThemeName, ThemeTokens> = {
 };
 
 interface ThemeCtx {
-  theme:       ThemeTokens;
-  isDark:      boolean;
-  themeName:   ThemeName;
-  setTheme:    (n: ThemeName) => void;
-  toggleTheme: () => void;
+  theme:        ThemeTokens;
+  isDark:       boolean;
+  themeName:    ThemeName;
+  setTheme:     (n: ThemeName) => void;
+  toggleTheme:  () => void;
 }
 
 const ThemeContext = createContext<ThemeCtx>({
