@@ -9,7 +9,7 @@ import { asyncHandler, validateRequest } from '../middleware/auth';
 const router = Router();
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// ─── VALIDATION SCHEMAS ──────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ VALIDATION SCHEMAS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 const registerSchema = z.object({
   shopName:  z.string().min(2),
   ownerName: z.string().min(2),
@@ -31,7 +31,7 @@ const googleAuthSchema = z.object({
   phone:      z.string().min(10).optional(),
 });
 
-// ─── HELPERS ────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ HELPERS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 function makeToken(userId: string, shopId: string, role: string, email: string) {
   return jwt.sign(
     { id: userId, shopId, role, email },
@@ -48,7 +48,7 @@ function userResponse(user: any, shop: any, token: string) {
   };
 }
 
-// ─── POST /api/auth/register ─────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ POST /api/auth/register Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 router.post('/register', validateRequest(registerSchema), asyncHandler(async (req, res) => {
   const { shopName, ownerName, email, password, phone, gstNumber, address } = req.body;
 
@@ -81,7 +81,7 @@ router.post('/register', validateRequest(registerSchema), asyncHandler(async (re
   return res.status(201).json(userResponse(shop.users[0], shop, token));
 }));
 
-// ─── POST /api/auth/login ────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ POST /api/auth/login Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 router.post('/login', validateRequest(loginSchema), asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -104,13 +104,13 @@ router.post('/login', validateRequest(loginSchema), asyncHandler(async (req, res
   return res.json(userResponse(user, user.shop, token));
 }));
 
-// ─── POST /api/auth/google ───────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ POST /api/auth/google Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 // Works for BOTH sign-in (existing user) and sign-up (new shop).
 // Flow:
 //   1. Frontend gets Google credential (ID token) via Google Sign-In button
 //   2. Sends it here
-//   3. If user exists → log them in
-//   4. If new → create shop + user (shopName & phone required)
+//   3. If user exists Ã¢â€ â€™ log them in
+//   4. If new Ã¢â€ â€™ create shop + user (shopName & phone required)
 router.post('/google', validateRequest(googleAuthSchema), asyncHandler(async (req, res) => {
   const { credential, shopName, phone } = req.body;
 
@@ -136,7 +136,7 @@ router.post('/google', validateRequest(googleAuthSchema), asyncHandler(async (re
   });
 
   if (existingUser) {
-    // Existing user — just log them in
+    // Existing user Ã¢â‚¬â€ just log them in
     if (!existingUser.isActive)      return res.status(403).json({ error: 'User inactive' });
     if (!existingUser.shop.isActive) return res.status(403).json({ error: 'Shop inactive' });
 
@@ -152,7 +152,7 @@ router.post('/google', validateRequest(googleAuthSchema), asyncHandler(async (re
     });
   }
 
-  // New user — need shopName + phone to create shop
+  // New user Ã¢â‚¬â€ need shopName + phone to create shop
   if (!shopName || !phone) {
     // Tell frontend this is a new user so it shows the registration form
     return res.status(200).json({
@@ -204,7 +204,7 @@ router.post('/google', validateRequest(googleAuthSchema), asyncHandler(async (re
   });
 }));
 
-// ─── POST /api/auth/forgot-password ─────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ POST /api/auth/forgot-password Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 router.post('/forgot-password', asyncHandler(async (req, res) => {
   const { email } = req.body;
   const user = await prisma.user.findFirst({ where: { email } });
@@ -216,11 +216,11 @@ router.post('/forgot-password', asyncHandler(async (req, res) => {
     data: { resetToken, resetExpiry: new Date(Date.now() + 3600000) }
   });
 
-  // TODO: send email — const link = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+  // TODO: send email Ã¢â‚¬â€ const link = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
   return res.json({ message: 'Password reset link sent to email' });
 }));
 
-// ─── POST /api/auth/reset-password ──────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ POST /api/auth/reset-password Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 router.post('/reset-password', asyncHandler(async (req, res) => {
   const { token, password } = req.body;
   try {
