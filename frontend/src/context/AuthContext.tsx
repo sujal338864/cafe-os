@@ -1,63 +1,77 @@
 'use client';
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import api from '@/lib/api';
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+type User = { id: string; name: string; email: string; role: string };
+type Shop = { id: string; name: string; plan: string };
 
-interface User { id: string; name: string; email: string; role: string; }
-interface Shop { id: string; name: string; plan: string; }
-interface AuthContextType {
-  user: User | null; shop: Shop | null; token: string | null;
+type AuthCtx = {
+  token: string | null;
+  user: User | null;
+  shop: Shop | null;
+  loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void; loading: boolean;
-}
+  logout: () => void;
+};
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthCtx>({
+  token: null, user: null, shop: null, loading: true,
+  login: async () => {}, logout: () => {},
+});
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [shop, setShop] = useState<Shop | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [token,   setToken]   = useState<string | null>(null);
+  const [user,    setUser]    = useState<User | null>(null);
+  const [shop,    setShop]    = useState<Shop | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const t = localStorage.getItem('shop_os_token');
-      const u = localStorage.getItem('shop_os_user');
-      const s = localStorage.getItem('shop_os_shop');
-      if (t && u && s) { setToken(t); setUser(JSON.parse(u)); setShop(JSON.parse(s)); }
-    } catch {}
-    setLoading(false);
+    const saved = localStorage.getItem('shop_os_token');
+    if (saved) {
+      setToken(saved);
+      fetchMe(saved);
+    } else {
+      setLoading(false);
+    }
   }, []);
 
+  const fetchMe = async (t: string) => {
+    try {
+      const { data } = await api.get('/api/auth/me', {
+        headers: { Authorization: `Bearer ${t}` },
+      });
+      setUser(data.user);
+      setShop(data.shop);
+    } catch {
+      localStorage.removeItem('shop_os_token');
+      setToken(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const login = async (email: string, password: string) => {
-    const { data } = await axios.post(`${BASE}/api/auth/login`, { email, password });
-    localStorage.setItem('shop_os_token', data.token);
-    localStorage.setItem('shop_os_user', JSON.stringify(data.user));
-    localStorage.setItem('shop_os_shop', JSON.stringify(data.shop));
-    setToken(data.token); setUser(data.user); setShop(data.shop);
-    router.push('/dashboard');
+    const { data } = await api.post('/api/auth/login', { email, password });
+    const { token: t, user: u, shop: s } = data;
+    localStorage.setItem('shop_os_token', t);
+    setToken(t);
+    setUser(u);
+    setShop(s);
   };
 
   const logout = () => {
     localStorage.removeItem('shop_os_token');
-    localStorage.removeItem('shop_os_user');
-    localStorage.removeItem('shop_os_shop');
-    setToken(null); setUser(null); setShop(null);
-    router.push('/login');
+    setToken(null);
+    setUser(null);
+    setShop(null);
+    window.location.href = '/login';
   };
 
   return (
-    <AuthContext.Provider value={{ user, shop, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ token, user, shop, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
-  return ctx;
-}
+export const useAuth = () => useContext(AuthContext);
