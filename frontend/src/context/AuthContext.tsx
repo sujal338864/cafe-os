@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const { data } = await axios.post(`\C:\Users\Lenovo\Downloads\files\frontend\src\app\dashboard/api/auth/login`, { email, password });
+    const { data } = await axios.post(`${BASE}/api/auth/login`, { email, password });
     localStorage.setItem('shop_os_token', data.token);
     localStorage.setItem('shop_os_user', JSON.stringify(data.user));
     localStorage.setItem('shop_os_shop', JSON.stringify(data.shop));

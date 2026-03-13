@@ -31,6 +31,7 @@
     "zustand": "^4.4.1"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.15.9",
     "@types/node": "^20.10.0",
     "eslint": "^8.54.0",
     "eslint-config-next": "^14.0.0"

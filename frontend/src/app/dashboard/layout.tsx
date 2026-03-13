@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -21,16 +21,13 @@ const NAV = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname  = usePathname();
-  const router    = useRouter();
   const { user, logout } = useAuth();
-const { theme, isDark, toggle } = useTheme();
+  const { theme, isDark, toggleTheme } = useTheme();
 
-  // Low-stock badge
   const [lowStock,      setLowStock]      = useState(0);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifs,    setShowNotifs]    = useState(false);
   const [unreadCount,   setUnreadCount]   = useState(0);
-  const [shopName,      setShopName]      = useState('My Shop');
 
   const fetchLowStock = useCallback(async () => {
     try {
@@ -51,7 +48,6 @@ const { theme, isDark, toggle } = useTheme();
   useEffect(() => {
     fetchLowStock();
     fetchNotifications();
-    // Refresh every 60 seconds
     const interval = setInterval(() => { fetchLowStock(); fetchNotifications(); }, 60000);
     return () => clearInterval(interval);
   }, [fetchLowStock, fetchNotifications]);
@@ -66,25 +62,12 @@ const { theme, isDark, toggle } = useTheme();
 
   const totalBadge = unreadCount + (lowStock > 0 ? 1 : 0);
 
-  const s = {
-    sidebar: {
-      width: 210, flexShrink: 0, background: theme.sidebar,
-      borderRight: `1px solid ${theme.border}`,
-      display: 'flex', flexDirection: 'column' as const,
-      height: '100vh', position: 'sticky' as const, top: 0,
-    },
-    main: {
-      flex: 1, background: theme.bg, minHeight: '100vh',
-      display: 'flex', flexDirection: 'column' as const,
-    },
-  };
-
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg }}>
 
-      {/* ── Sidebar ───────────────────────────────────────────────────── */}
-      <aside style={s.sidebar}>
-        {/* Shop name */}
+      {/* ── Sidebar ── */}
+      <aside style={{ width: 210, flexShrink: 0, background: theme.sidebar, borderRight: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0 }}>
+        {/* Logo */}
         <div style={{ padding: '20px 18px 14px', borderBottom: `1px solid ${theme.border}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 32, height: 32, borderRadius: 9, background: 'linear-gradient(135deg,#7c3aed,#3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: 'white', fontSize: 14, flexShrink: 0 }}>
@@ -97,19 +80,16 @@ const { theme, isDark, toggle } = useTheme();
           </div>
         </div>
 
-        {/* Nav links */}
-        <nav style={{ flex: 1, padding: '10px 10px', overflowY: 'auto' }}>
+        {/* Nav */}
+        <nav style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
           {NAV.map(({ href, label, icon }) => {
             const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
             const isProducts = href === '/dashboard/products';
             return (
               <a key={href} href={href}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 9, marginBottom: 2, textDecoration: 'none', background: active ? 'linear-gradient(135deg,rgba(124,58,237,.25),rgba(59,130,246,.15))' : 'transparent', color: active ? '#a78bfa' : theme.textMuted, fontWeight: active ? 700 : 500, fontSize: 13, transition: 'all .15s', position: 'relative' }}
-                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = theme.hover; }}
-                onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 9, marginBottom: 2, textDecoration: 'none', background: active ? 'linear-gradient(135deg,rgba(124,58,237,.25),rgba(59,130,246,.15))' : 'transparent', color: active ? '#a78bfa' : theme.textMuted, fontWeight: active ? 700 : 500, fontSize: 13, transition: 'all .15s', position: 'relative' }}>
                 <span style={{ fontSize: 15, width: 18, textAlign: 'center', flexShrink: 0 }}>{icon}</span>
                 <span style={{ flex: 1 }}>{label}</span>
-                {/* Low stock badge on Products */}
                 {isProducts && lowStock > 0 && (
                   <span style={{ background: '#ef4444', color: 'white', borderRadius: 99, fontSize: 10, fontWeight: 800, padding: '1px 6px', minWidth: 18, textAlign: 'center' }}>{lowStock}</span>
                 )}
@@ -119,13 +99,13 @@ const { theme, isDark, toggle } = useTheme();
           })}
         </nav>
 
-        {/* Bottom — theme toggle + sign out */}
+        {/* Footer */}
         <div style={{ padding: '12px 10px', borderTop: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <button onClick={toggle}>
-            
-  <span>{isDark ? '☀️' : '🌙'}</span>
-  <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
-</button>
+          <button onClick={toggleTheme}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', background: theme.hover, border: `1px solid ${theme.border}`, borderRadius: 9, padding: '8px 10px', cursor: 'pointer', color: theme.textMuted, fontSize: 12, fontWeight: 600 }}>
+            <span>{isDark ? '☀️' : '🌙'}</span>
+            <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+          </button>
           <div style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#7c3aed,#3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 800, flexShrink: 0 }}>
               {user?.name?.[0]?.toUpperCase() || 'A'}
@@ -142,8 +122,8 @@ const { theme, isDark, toggle } = useTheme();
         </div>
       </aside>
 
-      {/* ── Main ──────────────────────────────────────────────────────── */}
-      <main style={s.main}>
+      {/* ── Main ── */}
+      <main style={{ flex: 1, background: theme.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         {/* Top bar */}
         <div style={{ background: theme.sidebar, borderBottom: `1px solid ${theme.border}`, padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
           <div style={{ fontSize: 13, color: theme.textFaint }}>
@@ -162,7 +142,6 @@ const { theme, isDark, toggle } = useTheme();
                 )}
               </button>
 
-              {/* Dropdown */}
               {showNotifs && (
                 <div style={{ position: 'absolute', top: 44, right: 0, width: 320, background: theme.card, border: `1px solid ${theme.border}`, borderRadius: 14, boxShadow: '0 10px 40px rgba(0,0,0,0.4)', zIndex: 500, overflow: 'hidden' }}
                   onMouseLeave={() => setShowNotifs(false)}>
@@ -173,14 +152,13 @@ const { theme, isDark, toggle } = useTheme();
                     )}
                   </div>
                   <div style={{ maxHeight: 320, overflowY: 'auto' }}>
-                    {/* Low stock warning */}
                     {lowStock > 0 && (
                       <a href="/dashboard/products" style={{ display: 'block', padding: '12px 16px', borderBottom: `1px solid ${theme.border}`, textDecoration: 'none', background: 'rgba(239,68,68,0.05)' }}>
                         <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                           <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
                           <div>
                             <div style={{ fontSize: 13, fontWeight: 600, color: theme.text }}>Low Stock Alert</div>
-                            <div style={{ fontSize: 12, color: theme.textFaint, marginTop: 2 }}>{lowStock} product{lowStock > 1 ? 's are' : ' is'} running low on stock</div>
+                            <div style={{ fontSize: 12, color: theme.textFaint, marginTop: 2 }}>{lowStock} product{lowStock > 1 ? 's are' : ' is'} running low</div>
                           </div>
                         </div>
                       </a>
@@ -203,8 +181,6 @@ const { theme, isDark, toggle } = useTheme();
                 </div>
               )}
             </div>
-
-            {/* Starter badge */}
             <div style={{ background: 'linear-gradient(135deg,#7c3aed,#3b82f6)', borderRadius: 8, padding: '4px 12px', fontSize: 11, fontWeight: 800, color: 'white' }}>STARTER</div>
           </div>
         </div>
