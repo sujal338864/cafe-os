@@ -1,77 +1,75 @@
 'use client';
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 
-type User = { id: string; name: string; email: string; role: string };
-type Shop = { id: string; name: string; plan: string };
+interface User { id: string; name: string; email: string; role: string; }
+interface Shop { id: string; name: string; plan: string; }
 
-type AuthCtx = {
-  token: string | null;
-  user: User | null;
-  shop: Shop | null;
+interface AuthContextType {
+  user:    User | null;
+  shop:    Shop | null;
+  token:   string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-};
+  login:   (token: string, user: User, shop: Shop) => void;
+  logout:  () => void;
+}
 
-const AuthContext = createContext<AuthCtx>({
-  token: null, user: null, shop: null, loading: true,
-  login: async () => {}, logout: () => {},
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token,   setToken]   = useState<string | null>(null);
+  const router = useRouter();
   const [user,    setUser]    = useState<User | null>(null);
   const [shop,    setShop]    = useState<Shop | null>(null);
+  const [token,   setToken]   = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Restore session on mount
   useEffect(() => {
-    const saved = localStorage.getItem('shop_os_token');
-    if (saved) {
-      setToken(saved);
-      fetchMe(saved);
-    } else {
-      setLoading(false);
-    }
+    try {
+      const t = localStorage.getItem('shop_os_token');
+      const u = localStorage.getItem('shop_os_user');
+      const s = localStorage.getItem('shop_os_shop');
+      if (t && u && s) {
+        setToken(t);
+        setUser(JSON.parse(u));
+        setShop(JSON.parse(s));
+        api.defaults.headers.common['Authorization'] = `Bearer ${t}`;
+      }
+    } catch { /* ignore */ }
+    finally { setLoading(false); }
   }, []);
 
-  const fetchMe = async (t: string) => {
-    try {
-      const { data } = await api.get('/api/auth/me', {
-        headers: { Authorization: `Bearer ${t}` },
-      });
-      setUser(data.user);
-      setShop(data.shop);
-    } catch {
-      localStorage.removeItem('shop_os_token');
-      setToken(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const login = async (email: string, password: string) => {
-    const { data } = await api.post('/api/auth/login', { email, password });
-    const { token: t, user: u, shop: s } = data;
-    localStorage.setItem('shop_os_token', t);
-    setToken(t);
-    setUser(u);
-    setShop(s);
+  const login = (token: string, user: User, shop: Shop) => {
+    localStorage.setItem('shop_os_token', token);
+    localStorage.setItem('shop_os_user', JSON.stringify(user));
+    localStorage.setItem('shop_os_shop', JSON.stringify(shop));
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    setToken(token);
+    setUser(user);
+    setShop(shop);
   };
 
   const logout = () => {
     localStorage.removeItem('shop_os_token');
+    localStorage.removeItem('shop_os_user');
+    localStorage.removeItem('shop_os_shop');
+    delete api.defaults.headers.common['Authorization'];
     setToken(null);
     setUser(null);
     setShop(null);
-    window.location.href = '/login';
+    router.push('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, shop, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, shop, token, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export const useAuth = () => useContext(AuthContext);
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
+  return ctx;
+}
