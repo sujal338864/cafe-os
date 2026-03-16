@@ -8,7 +8,7 @@ type Product = {
 };
 type CartItem = Product & { qty: number; note: string };
 
-const fmt = (n: number) => '₹' + Number(n || 0).toLocaleString('en-IN');
+const fmt = (n: number) => 'â‚¹' + Number(n || 0).toLocaleString('en-IN');
 
 export default function OrderPage() {
   const [products,   setProducts]   = useState<Product[]>([]);
@@ -105,29 +105,29 @@ export default function OrderPage() {
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
   const shopName  = shopInfo?.name || 'Our Menu';
 
-  // ── DONE SCREEN ──────────────────────────────────────────────
+  // â”€â”€ DONE SCREEN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (step === 'done') return (
     <div style={{ minHeight: '100vh', background: '#0a0f0a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: "'DM Sans', sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet" />
       <div style={{ textAlign: 'center', maxWidth: 360 }}>
-        <div style={{ width: 88, height: 88, borderRadius: '50%', background: 'linear-gradient(135deg,#22c55e,#16a34a)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: 44, boxShadow: '0 0 40px rgba(34,197,94,0.4)' }}>✓</div>
+        <div style={{ width: 88, height: 88, borderRadius: '50%', background: 'linear-gradient(135deg,#22c55e,#16a34a)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: 44, boxShadow: '0 0 40px rgba(34,197,94,0.4)' }}>âœ“</div>
         <h1 style={{ fontSize: 28, fontWeight: 800, color: '#f0fdf4', marginBottom: 8, fontFamily: "'Playfair Display', serif" }}>Order Placed!</h1>
         <p style={{ color: '#86efac', fontSize: 15, marginBottom: 6 }}>We've received your order, <b style={{ color: '#f0fdf4' }}>{name}</b>!</p>
         {invoice && <p style={{ color: '#4ade80', fontSize: 13, marginBottom: 24 }}>Invoice #{invoice}</p>}
         <div style={{ background: '#0f1f0f', border: '1px solid #166534', borderRadius: 16, padding: 20, marginBottom: 24 }}>
           {cart.map((item, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: i < cart.length - 1 ? '1px solid #14532d' : 'none', color: '#dcfce7', fontSize: 14 }}>
-              <span>{item.name} ×{item.qty}</span>
+              <span>{item.name} Ã—{item.qty}</span>
               <span style={{ color: '#4ade80', fontWeight: 700 }}>{fmt(item.sellingPrice * item.qty)}</span>
             </div>
           ))}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, paddingTop: 10, borderTop: '1px solid #166534', fontWeight: 800, fontSize: 16, color: '#f0fdf4' }}>
             <span>Total</span><span style={{ color: '#4ade80' }}>{fmt(total)}</span>
           </div>
-          {payMode === 'CASH' && <div style={{ marginTop: 10, padding: '8px 12px', background: '#14532d', borderRadius: 8, color: '#86efac', fontSize: 13, textAlign: 'center' }}>💵 Pay at counter when ready</div>}
-          {payMode === 'UPI' && <div style={{ marginTop: 10, padding: '8px 12px', background: '#14532d', borderRadius: 8, color: '#86efac', fontSize: 13, textAlign: 'center' }}>📱 Please complete UPI payment</div>}
+          {payMode === 'CASH' && <div style={{ marginTop: 10, padding: '8px 12px', background: '#14532d', borderRadius: 8, color: '#86efac', fontSize: 13, textAlign: 'center' }}>ðŸ’µ Pay at counter when ready</div>}
+          {payMode === 'UPI' && <div style={{ marginTop: 10, padding: '8px 12px', background: '#14532d', borderRadius: 8, color: '#86efac', fontSize: 13, textAlign: 'center' }}>ðŸ“± Please complete UPI payment</div>}
         </div>
-        {table && <p style={{ color: '#86efac', fontSize: 14, marginBottom: 20 }}>🪑 Table <b style={{ color: '#f0fdf4' }}>{table}</b> — we'll bring it to you!</p>}
+        {table && <p style={{ color: '#86efac', fontSize: 14, marginBottom: 20 }}>ðŸª‘ Table <b style={{ color: '#f0fdf4' }}>{table}</b> â€” we'll bring it to you!</p>}
         <button onClick={() => { setCart([]); setStep('menu'); setName(''); setPhone(''); setTable(''); setNotes(''); }}
           style={{ background: 'linear-gradient(135deg,#22c55e,#16a34a)', border: 'none', color: 'white', padding: '14px 36px', borderRadius: 50, fontWeight: 700, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 20px rgba(34,197,94,0.4)' }}>
           Order More
@@ -136,14 +136,14 @@ export default function OrderPage() {
     </div>
   );
 
-  // ── INFO + PAYMENT SCREEN ─────────────────────────────────────
+  // â”€â”€ INFO + PAYMENT SCREEN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (step === 'info' || step === 'payment') return (
     <div style={{ minHeight: '100vh', background: '#080c08', fontFamily: "'DM Sans', sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet" />
 
       {/* Header */}
       <div style={{ padding: '16px 20px', borderBottom: '1px solid #1a2e1a', display: 'flex', alignItems: 'center', gap: 12, background: '#0a0f0a', position: 'sticky', top: 0, zIndex: 10 }}>
-        <button onClick={() => setStep('menu')} style={{ background: '#1a2e1a', border: 'none', color: '#86efac', width: 36, height: 36, borderRadius: '50%', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+        <button onClick={() => setStep('menu')} style={{ background: '#1a2e1a', border: 'none', color: '#86efac', width: 36, height: 36, borderRadius: '50%', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>â†</button>
         <div style={{ fontWeight: 800, fontSize: 17, color: '#f0fdf4' }}>Your Order</div>
       </div>
 
@@ -156,11 +156,11 @@ export default function OrderPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: '#f0fdf4' }}>{item.name}</div>
-                  {item.note && <div style={{ fontSize: 11, color: '#86efac', marginTop: 2 }}>📝 {item.note}</div>}
+                  {item.note && <div style={{ fontSize: 11, color: '#86efac', marginTop: 2 }}>ðŸ“ {item.note}</div>}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1a2e1a', borderRadius: 20, padding: '4px 10px' }}>
-                    <button onClick={() => dec(item.id)} style={{ background: 'none', border: 'none', color: '#4ade80', fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>−</button>
+                    <button onClick={() => dec(item.id)} style={{ background: 'none', border: 'none', color: '#4ade80', fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>âˆ’</button>
                     <span style={{ color: '#f0fdf4', fontWeight: 700, fontSize: 14, minWidth: 16, textAlign: 'center' }}>{item.qty}</span>
                     <button onClick={() => inc(item.id)} style={{ background: 'none', border: 'none', color: '#4ade80', fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>+</button>
                   </div>
@@ -169,7 +169,7 @@ export default function OrderPage() {
               </div>
               <button onClick={() => setNoteFor(noteFor === item.id ? null : item.id)}
                 style={{ background: 'none', border: 'none', color: '#4ade80', fontSize: 12, cursor: 'pointer', padding: '0 0 8px', opacity: 0.7 }}>
-                {noteFor === item.id ? '▲ Hide note' : '+ Add note (e.g. less spice)'}
+                {noteFor === item.id ? 'â–² Hide note' : '+ Add note (e.g. less spice)'}
               </button>
               {noteFor === item.id && (
                 <input value={item.note} onChange={e => setItemNote(item.id, e.target.value)}
@@ -205,7 +205,7 @@ export default function OrderPage() {
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontWeight: 700, fontSize: 13, color: '#4ade80', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Payment Method</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            {[{ v: 'CASH', icon: '💵', label: 'Pay at Counter', sub: 'Cash when served' }, { v: 'UPI', icon: '📱', label: 'UPI Payment', sub: 'GPay / PhonePe' }].map(m => (
+            {[{ v: 'CASH', icon: 'ðŸ’µ', label: 'Pay at Counter', sub: 'Cash when served' }, { v: 'UPI', icon: 'ðŸ“±', label: 'UPI Payment', sub: 'GPay / PhonePe' }].map(m => (
               <button key={m.v} onClick={() => setPayMode(m.v as any)}
                 style={{ background: payMode === m.v ? 'linear-gradient(135deg,#15803d,#166534)' : '#0f1a0f', border: `2px solid ${payMode === m.v ? '#22c55e' : '#1a2e1a'}`, borderRadius: 12, padding: '14px 12px', cursor: 'pointer', textAlign: 'left', transition: 'all .15s' }}>
                 <div style={{ fontSize: 24, marginBottom: 4 }}>{m.icon}</div>
@@ -221,26 +221,26 @@ export default function OrderPage() {
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: '#080c08', borderTop: '1px solid #1a2e1a' }}>
         <button onClick={placeOrder} disabled={placing || !name.trim()}
           style={{ width: '100%', background: name.trim() ? 'linear-gradient(135deg,#22c55e,#16a34a)' : '#1a2e1a', border: 'none', color: name.trim() ? 'white' : '#4b5563', padding: '16px', borderRadius: 14, fontWeight: 800, fontSize: 16, cursor: name.trim() ? 'pointer' : 'not-allowed', boxShadow: name.trim() ? '0 4px 20px rgba(34,197,94,0.35)' : 'none', transition: 'all .2s' }}>
-          {placing ? 'Placing Order...' : `Place Order · ${fmt(total)}`}
+          {placing ? 'Placing Order...' : `Place Order Â· ${fmt(total)}`}
         </button>
       </div>
     </div>
   );
 
-  // ── MENU SCREEN ───────────────────────────────────────────────
+  // â”€â”€ MENU SCREEN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div style={{ minHeight: '100vh', background: '#080c08', fontFamily: "'DM Sans', sans-serif", paddingBottom: cartCount > 0 ? 90 : 20 }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet" />
 
       {/* Hero header */}
       <div style={{ background: 'linear-gradient(180deg,#0a1a0a,#080c08)', padding: '28px 20px 20px', textAlign: 'center', borderBottom: '1px solid #1a2e1a' }}>
-        <div style={{ width: 52, height: 52, borderRadius: 14, background: 'linear-gradient(135deg,#22c55e,#16a34a)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: 26, boxShadow: '0 4px 20px rgba(34,197,94,0.3)' }}>☕</div>
+        <div style={{ width: 52, height: 52, borderRadius: 14, background: 'linear-gradient(135deg,#22c55e,#16a34a)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: 26, boxShadow: '0 4px 20px rgba(34,197,94,0.3)' }}>â˜•</div>
         <h1 style={{ fontSize: 26, fontWeight: 800, color: '#f0fdf4', margin: '0 0 4px', fontFamily: "'Playfair Display', serif" }}>{shopName}</h1>
         <p style={{ fontSize: 13, color: '#86efac', margin: 0 }}>Order fresh, pay easy</p>
 
         {/* Search */}
         <div style={{ marginTop: 16, position: 'relative' }}>
-          <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16, color: '#4ade80' }}>🔍</span>
+          <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16, color: '#4ade80' }}>ðŸ”</span>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search menu..."
             style={{ width: '100%', background: '#0f1a0f', border: '1px solid #1a2e1a', borderRadius: 12, padding: '11px 14px 11px 40px', color: '#f0fdf4', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
         </div>
@@ -288,7 +288,7 @@ export default function OrderPage() {
                       <span style={{ fontWeight: 800, fontSize: 16, color: col }}>{fmt(p.sellingPrice)}</span>
                       {inCart ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1a2e1a', borderRadius: 20, padding: '5px 10px' }}>
-                          <button onClick={() => dec(p.id)} style={{ background: 'none', border: 'none', color: col, fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: 0 }}>−</button>
+                          <button onClick={() => dec(p.id)} style={{ background: 'none', border: 'none', color: col, fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: 0 }}>âˆ’</button>
                           <span style={{ color: '#f0fdf4', fontWeight: 800, fontSize: 14, minWidth: 16, textAlign: 'center' }}>{inCart.qty}</span>
                           <button onClick={() => inc(p.id)} style={{ background: 'none', border: 'none', color: col, fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: 0 }}>+</button>
                         </div>
