@@ -19,7 +19,7 @@ async function post(path: string, body: any) {
   return d;
 }
 
-export default function OrderPage() {
+export default function MenuPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cats, setCats] = useState<string[]>([]);
@@ -32,9 +32,9 @@ export default function OrderPage() {
   const [phone, setPhone] = useState('');
   const [table, setTable] = useState('');
   const [notes, setNotes] = useState('');
-  const [pay, setPay] = useState<'CASH'|'UPI'>('CASH');
+  const [pay, setPay] = useState<'UPI'|'CASH'>('UPI');
   const [placing, setPlacing] = useState(false);
-  const [invoice, setInvoice] = useState('');
+  const [result, setResult] = useState<{ invoiceNumber: string; tokenNumber?: string; paymentStatus: string; whatsappSent: boolean } | null>(null);
   const [noteFor, setNoteFor] = useState<string|null>(null);
 
   useEffect(() => { load(); }, []);
@@ -66,8 +66,20 @@ export default function OrderPage() {
     if (!name.trim()) return;
     setPlacing(true);
     try {
-      const d = await post('/api/menu/order', { customerName: name.trim(), customerPhone: phone.trim() || undefined, tableNumber: table.trim() || undefined, notes: notes.trim() || undefined, paymentMethod: pay, items: cart.map(i => ({ productId: i.id, name: i.name, quantity: i.qty, unitPrice: i.sellingPrice, costPrice: 0, taxRate: i.taxRate, discount: 0 })) });
-      setInvoice(d.order?.invoiceNumber || d.invoiceNumber || '');
+      const d = await post('/api/menu/order', {
+        customerName: name.trim(),
+        customerPhone: phone.trim() || undefined,
+        tableNumber: table.trim() || undefined,
+        notes: notes.trim() || undefined,
+        paymentMethod: pay,
+        items: cart.map(i => ({ productId: i.id, name: i.name, quantity: i.qty, unitPrice: i.sellingPrice, costPrice: 0, taxRate: i.taxRate, discount: 0 }))
+      });
+      setResult({
+        invoiceNumber: d.order?.invoiceNumber || d.invoiceNumber || '',
+        tokenNumber: d.tokenNumber,
+        paymentStatus: d.paymentStatus || pay,
+        whatsappSent: d.whatsappSent || false,
+      });
       setStep('done');
     } catch (e: any) { alert(e?.response?.data?.error || 'Failed to place order'); }
     finally { setPlacing(false); }
@@ -77,24 +89,59 @@ export default function OrderPage() {
   const inp: any = { background: C, border: '1px solid ' + B, borderRadius: 10, padding: '12px 14px', color: T, fontSize: 14, outline: 'none', width: '100%', boxSizing: 'border-box' };
   const COLS = ['#22c55e','#3b82f6','#f59e0b','#ec4899','#8b5cf6','#06b6d4'];
 
-  if (step === 'done') return (
-    <div style={{ minHeight: '100vh', background: G, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: 'system-ui,sans-serif' }}>
-      <div style={{ textAlign: 'center', maxWidth: 360, width: '100%' }}>
-        <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#22c55e,#16a34a)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: 38 }}>✓</div>
-        <h1 style={{ fontSize: 26, fontWeight: 800, color: T, marginBottom: 6 }}>Order Placed!</h1>
-        <p style={{ color: M, marginBottom: 4 }}>Thank you, <b style={{ color: T }}>{name}</b>!</p>
-        {invoice && <p style={{ color: A, fontSize: 13, marginBottom: 20 }}>#{invoice}</p>}
-        <div style={{ background: C, border: '1px solid ' + B, borderRadius: 14, padding: 16, marginBottom: 20 }}>
-          {cart.map((item, i) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: i < cart.length-1 ? '1px solid '+B : 'none', color: T, fontSize: 14 }}><span>{item.name} ×{item.qty}</span><span style={{ color: A, fontWeight: 700 }}>{fmt(item.sellingPrice * item.qty)}</span></div>)}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, paddingTop: 10, borderTop: '1px solid '+B, fontWeight: 800, fontSize: 16, color: T }}><span>Total</span><span style={{ color: A }}>{fmt(total)}</span></div>
-          <div style={{ marginTop: 10, padding: '8px 12px', background: B, borderRadius: 8, color: M, fontSize: 13, textAlign: 'center' }}>{pay === 'CASH' ? '💵 Pay at counter' : '📱 Complete UPI payment'}</div>
-        </div>
-        {table && <p style={{ color: M, fontSize: 14, marginBottom: 16 }}>🪑 Table <b style={{ color: T }}>{table}</b></p>}
-        <button onClick={() => { setCart([]); setStep('menu'); setName(''); setPhone(''); setTable(''); setNotes(''); }} style={{ background: 'linear-gradient(135deg,#22c55e,#16a34a)', border: 'none', color: 'white', padding: '14px 36px', borderRadius: 50, fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>Order More</button>
-      </div>
-    </div>
-  );
+  // ── Done screen ──────────────────────────────────────────────
+  if (step === 'done' && result) {
+    const isPaid = result.paymentStatus === 'PAID';
+    const token = result.tokenNumber?.replace(/^0+/, '') || result.invoiceNumber?.replace('ONL-', '').replace(/^0+/, '') || '?';
+    return (
+      <div style={{ minHeight: '100vh', background: G, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: 'system-ui,sans-serif' }}>
+        <div style={{ textAlign: 'center', maxWidth: 360, width: '100%' }}>
+          {isPaid ? (
+            <>
+              <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#22c55e,#16a34a)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: 38 }}>✓</div>
+              <h1 style={{ fontSize: 26, fontWeight: 800, color: T, marginBottom: 6 }}>Order Confirmed!</h1>
+              <p style={{ color: M, marginBottom: 4 }}>Thank you, <b style={{ color: T }}>{name}</b>!</p>
+              {result.invoiceNumber && <p style={{ color: A, fontSize: 13, marginBottom: 16 }}>#{result.invoiceNumber}</p>}
+              {result.whatsappSent && phone && (
+                <div style={{ background: '#064e3b', border: '1px solid #065f46', borderRadius: 12, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: '#6ee7b7' }}>
+                  📲 Bill sent to WhatsApp: <b style={{ color: T }}>{phone}</b>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#f59e0b,#d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: 38 }}>🎫</div>
+              <h1 style={{ fontSize: 26, fontWeight: 800, color: T, marginBottom: 6 }}>Order Placed!</h1>
+              <p style={{ color: M, marginBottom: 16 }}>Please pay at the counter</p>
+              {/* Token card */}
+              <div style={{ background: 'linear-gradient(135deg,#f59e0b22,#d9770622)', border: '2px solid #f59e0b', borderRadius: 18, padding: '24px 16px', marginBottom: 20 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b', textTransform: 'uppercase' as const, letterSpacing: 2, marginBottom: 8 }}>Your Token Number</div>
+                <div style={{ fontSize: 64, fontWeight: 900, color: '#fbbf24', lineHeight: 1, marginBottom: 8 }}>#{token}</div>
+                <div style={{ fontSize: 13, color: M }}>Show this number at the counter to collect your order</div>
+              </div>
+            </>
+          )}
 
+          {/* Order summary */}
+          <div style={{ background: C, border: '1px solid ' + B, borderRadius: 14, padding: 16, marginBottom: 20 }}>
+            {cart.map((item, i) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: i < cart.length-1 ? '1px solid '+B : 'none', color: T, fontSize: 14 }}><span>{item.name} ×{item.qty}</span><span style={{ color: A, fontWeight: 700 }}>{fmt(item.sellingPrice * item.qty)}</span></div>)}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, paddingTop: 10, borderTop: '1px solid '+B, fontWeight: 800, fontSize: 16, color: T }}><span>Total</span><span style={{ color: A }}>{fmt(total)}</span></div>
+            <div style={{ marginTop: 10, padding: '8px 12px', background: B, borderRadius: 8, color: M, fontSize: 13, textAlign: 'center' }}>
+              {isPaid ? '📱 UPI payment confirmed' : '💵 Cash — Show token at counter'}
+            </div>
+          </div>
+
+          {table && <p style={{ color: M, fontSize: 14, marginBottom: 16 }}>🪑 Table <b style={{ color: T }}>{table}</b></p>}
+          <button onClick={() => { setCart([]); setStep('menu'); setName(''); setPhone(''); setTable(''); setNotes(''); setResult(null); }}
+            style={{ background: 'linear-gradient(135deg,#22c55e,#16a34a)', border: 'none', color: 'white', padding: '14px 36px', borderRadius: 50, fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
+            Order More
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Info / checkout step ───────────────────────────────────────
   if (step === 'info') return (
     <div style={{ minHeight: '100vh', background: G, fontFamily: 'system-ui,sans-serif', paddingBottom: 90 }}>
       <div style={{ padding: '14px 18px', borderBottom: '1px solid '+B, display: 'flex', alignItems: 'center', gap: 12, background: '#0a0f0a', position: 'sticky', top: 0, zIndex: 10 }}>
@@ -102,6 +149,7 @@ export default function OrderPage() {
         <div style={{ fontWeight: 800, fontSize: 17, color: T }}>Your Order</div>
       </div>
       <div style={{ padding: '18px 18px 0' }}>
+        {/* Order summary */}
         <div style={{ background: C, border: '1px solid '+B, borderRadius: 14, padding: 14, marginBottom: 18 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: A, textTransform: 'uppercase' as const, letterSpacing: 1, marginBottom: 10 }}>Summary</div>
           {cart.map((item, i) => (
@@ -131,32 +179,47 @@ export default function OrderPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 17, color: T }}><span>Total</span><span style={{ color: A }}>{fmt(total)}</span></div>
           </div>
         </div>
+
+        {/* Your details */}
         <div style={{ fontSize: 11, fontWeight: 700, color: A, textTransform: 'uppercase' as const, letterSpacing: 1, marginBottom: 8 }}>Your Details</div>
         <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 9, marginBottom: 16 }}>
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name *" style={inp} />
-          <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone (optional)" type="tel" style={inp} />
+          <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="📱 Mobile (get bill on WhatsApp)" type="tel" style={inp} />
           <input value={table} onChange={e => setTable(e.target.value)} placeholder="Table number (optional)" style={inp} />
           <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Special requests..." rows={2} style={{ ...inp, resize: 'none' as const, fontFamily: 'inherit' }} />
         </div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: A, textTransform: 'uppercase' as const, letterSpacing: 1, marginBottom: 8 }}>Payment</div>
+
+        {/* Payment method */}
+        <div style={{ fontSize: 11, fontWeight: 700, color: A, textTransform: 'uppercase' as const, letterSpacing: 1, marginBottom: 8 }}>How do you want to pay?</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 16 }}>
-          {[{ v: 'CASH', icon: '💵', l: 'Pay at Counter', s: 'Cash when served' }, { v: 'UPI', icon: '📱', l: 'UPI Payment', s: 'GPay / PhonePe' }].map(m => (
-            <button key={m.v} onClick={() => setPay(m.v as any)} style={{ background: pay === m.v ? 'linear-gradient(135deg,#15803d,#166534)' : C, border: '2px solid ' + (pay === m.v ? A : B), borderRadius: 11, padding: '12px 10px', cursor: 'pointer', textAlign: 'left' as const }}>
-              <div style={{ fontSize: 20, marginBottom: 3 }}>{m.icon}</div>
-              <div style={{ fontWeight: 700, fontSize: 12, color: T }}>{m.l}</div>
-              <div style={{ fontSize: 10, color: M }}>{m.s}</div>
+          {[
+            { v: 'UPI',  icon: '📱', l: 'Pay with UPI', s: 'GPay · PhonePe · Paytm' },
+            { v: 'CASH', icon: '💵', l: 'Pay at Counter', s: 'Cash when you collect' },
+          ].map(m => (
+            <button key={m.v} onClick={() => setPay(m.v as any)}
+              style={{ background: pay === m.v ? (m.v === 'UPI' ? 'linear-gradient(135deg,#1d4ed8,#3b82f6)' : 'linear-gradient(135deg,#b45309,#d97706)') : C, border: '2px solid ' + (pay === m.v ? (m.v === 'UPI' ? '#3b82f6' : '#f59e0b') : B), borderRadius: 11, padding: '14px 10px', cursor: 'pointer', textAlign: 'left' as const }}>
+              <div style={{ fontSize: 22, marginBottom: 4 }}>{m.icon}</div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: T }}>{m.l}</div>
+              <div style={{ fontSize: 10, color: M, marginTop: 2 }}>{m.s}</div>
+              {m.v === 'CASH' && pay === 'CASH' && (
+                <div style={{ marginTop: 6, background: 'rgba(0,0,0,0.2)', borderRadius: 6, padding: '4px 8px', fontSize: 10, color: '#fbbf24', fontWeight: 600 }}>
+                  🎫 You'll get a token number
+                </div>
+              )}
             </button>
           ))}
         </div>
       </div>
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 18px', background: G, borderTop: '1px solid '+B }}>
-        <button onClick={placeOrder} disabled={placing || !name.trim()} style={{ width: '100%', background: name.trim() ? 'linear-gradient(135deg,#22c55e,#16a34a)' : B, border: 'none', color: name.trim() ? 'white' : '#4b5563', padding: '14px', borderRadius: 13, fontWeight: 800, fontSize: 15, cursor: name.trim() ? 'pointer' : 'not-allowed' }}>
-          {placing ? 'Placing...' : `Place Order · ${fmt(total)}`}
+        <button onClick={placeOrder} disabled={placing || !name.trim()}
+          style={{ width: '100%', background: name.trim() ? 'linear-gradient(135deg,#22c55e,#16a34a)' : B, border: 'none', color: name.trim() ? 'white' : '#4b5563', padding: '14px', borderRadius: 13, fontWeight: 800, fontSize: 15, cursor: name.trim() ? 'pointer' : 'not-allowed' }}>
+          {placing ? 'Placing...' : pay === 'UPI' ? `Pay ${fmt(total)} · UPI` : `Get Token · ${fmt(total)}`}
         </button>
       </div>
     </div>
   );
 
+  // ── Menu browsing ─────────────────────────────────────────────
   return (
     <div style={{ minHeight: '100vh', background: G, fontFamily: 'system-ui,sans-serif', paddingBottom: count > 0 ? 88 : 20 }}>
       <div style={{ background: 'linear-gradient(180deg,#0a1a0a,#080c08)', padding: '24px 18px 14px', textAlign: 'center', borderBottom: '1px solid '+B }}>

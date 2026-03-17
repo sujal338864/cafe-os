@@ -8,23 +8,26 @@ const STC: any = { PAID:{bg:'rgba(16,185,129,.14)',color:'#10b981'}, PARTIAL:{bg
 const MTC: any = { CASH:'#10b981', UPI:'#3b82f6', CARD:'#a78bfa', BANK_TRANSFER:'#f59e0b', CREDIT:'#ef4444' };
 
 function exportCSV(orders: any[]) {
-  const rows = [['Invoice','Customer','Phone','Items','Subtotal','Tax','Discount','Total','Method','Status','Date'],
-    ...orders.map(o => [o.invoiceNumber,o.customer?.name||'Walk-in',o.customer?.phone||'',o.items?.length??'',o.subtotal??'',o.taxAmount??'',o.discountAmount??'',o.totalAmount,o.paymentMethod,o.paymentStatus,new Date(o.createdAt).toLocaleDateString('en-IN')])];
+  const rows = [['Invoice','Customer','Phone','Items','Total','Method','Status','Date'],
+    ...orders.map(o => [o.invoiceNumber, o.customer?.name||o.customerName||'Walk-in', o.customer?.phone||'', o.items?.length??'', o.totalAmount, o.paymentMethod, o.paymentStatus, new Date(o.createdAt).toLocaleDateString('en-IN')])];
   const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download = `orders-${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = `orders-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
 }
 
 export default function OrdersPage() {
   const { theme } = useTheme();
-  const [orders,  setOrders]  = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search,  setSearch]  = useState('');
-  const [status,  setStatus]  = useState('ALL');
-  const [method,  setMethod]  = useState('ALL');
+  const [orders,   setOrders]   = useState<any[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [search,   setSearch]   = useState('');
+  const [status,   setStatus]   = useState('ALL');
+  const [method,   setMethod]   = useState('ALL');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo,   setDateTo]   = useState('');
   const [expanded, setExpanded] = useState<string|null>(null);
+  const [updating, setUpdating] = useState<string|null>(null);
 
   useEffect(() => { load(); }, []);
 
@@ -37,10 +40,26 @@ export default function OrdersPage() {
     finally { setLoading(false); }
   };
 
+  const markPaid = async (id: string) => {
+    setUpdating(id);
+    try {
+      await api.put(`/api/orders/${id}/payment`, { paymentStatus: 'PAID' });
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, paymentStatus: 'PAID' } : o));
+    } catch (e: any) {
+      alert(e.response?.data?.error || 'Failed to update');
+    } finally { setUpdating(null); }
+  };
+
   const filtered = useMemo(() => orders.filter(o => {
     if (status !== 'ALL' && o.paymentStatus !== status) return false;
     if (method !== 'ALL' && o.paymentMethod !== method) return false;
-    if (search) { const q = search.toLowerCase(); if (!o.invoiceNumber?.toLowerCase().includes(q) && !o.customer?.name?.toLowerCase().includes(q) && !o.customer?.phone?.includes(q)) return false; }
+    if (search) {
+      const q = search.toLowerCase();
+      if (!o.invoiceNumber?.toLowerCase().includes(q) &&
+          !o.customer?.name?.toLowerCase().includes(q) &&
+          !o.customerName?.toLowerCase().includes(q) &&
+          !o.customer?.phone?.includes(q)) return false;
+    }
     if (dateFrom) { const f = new Date(dateFrom); f.setHours(0,0,0,0); if (new Date(o.createdAt) < f) return false; }
     if (dateTo)   { const t = new Date(dateTo);   t.setHours(23,59,59,999); if (new Date(o.createdAt) > t) return false; }
     return true;
@@ -61,13 +80,18 @@ export default function OrdersPage() {
           <p style={{ fontSize:13, color:theme.textFaint, marginTop:3 }}>{filtered.length} orders{filtered.length!==orders.length?` (of ${orders.length})`:''}</p>
         </div>
         <div style={{ display:'flex', gap:8 }}>
-          <button onClick={load} style={{ background:theme.hover, border:'1px solid '+theme.border, color:theme.textMuted, padding:'9px 16px', borderRadius:10, fontWeight:600, fontSize:12, cursor:'pointer' }}>↻ Refresh</button>
-          <button onClick={() => exportCSV(filtered)} style={{ background:theme.hover, border:'1px solid '+theme.border, color:theme.textMuted, padding:'9px 16px', borderRadius:10, fontWeight:700, fontSize:12, cursor:'pointer' }}>⬇️ Export CSV</button>
+          <button onClick={load} style={{ background:theme.hover, border:'1px solid '+theme.border, color:theme.textMuted, padding:'9px 16px', borderRadius:10, fontWeight:600, fontSize:12, cursor:'pointer' }}>Refresh</button>
+          <button onClick={() => exportCSV(filtered)} style={{ background:theme.hover, border:'1px solid '+theme.border, color:theme.textMuted, padding:'9px 16px', borderRadius:10, fontWeight:700, fontSize:12, cursor:'pointer' }}>Export CSV</button>
         </div>
       </div>
 
       <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
-        {[{label:'Total Orders',val:filtered.length,color:'#3b82f6'},{label:'Revenue',val:fmt(totalRev),color:'#10b981'},{label:'Collected',val:fmt(totalPaid),color:'#a78bfa'},{label:'Pending',val:fmt(totalPending),color:'#f59e0b'}].map(({label,val,color}) => (
+        {[
+          {label:'Total Orders', val:filtered.length,   color:'#3b82f6'},
+          {label:'Revenue',      val:fmt(totalRev),     color:'#10b981'},
+          {label:'Collected',    val:fmt(totalPaid),    color:'#a78bfa'},
+          {label:'Pending',      val:fmt(totalPending), color:'#f59e0b'},
+        ].map(({label,val,color}) => (
           <div key={label} style={{...card, padding:'14px 18px'}}>
             <div style={{fontSize:11,color:theme.textFaint,fontWeight:700,textTransform:'uppercase',marginBottom:6}}>{label}</div>
             <div style={{fontSize:22,fontWeight:800,color}}>{val}</div>
@@ -76,7 +100,7 @@ export default function OrdersPage() {
       </div>
 
       <div style={{ display:'flex', gap:10, flexWrap:'wrap', alignItems:'center' }}>
-        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Invoice, customer, phone..." style={{...inp,width:220}} />
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search invoice, customer, phone..." style={{...inp,width:240}} />
         <select value={status} onChange={e=>setStatus(e.target.value)} style={inp}>
           <option value="ALL">All Status</option>
           <option value="PAID">Paid</option>
@@ -96,7 +120,9 @@ export default function OrdersPage() {
         <input type="date" value={dateTo} onChange={e=>setDateTo(e.target.value)} style={inp} />
         {(search||status!=='ALL'||method!=='ALL'||dateFrom||dateTo) && (
           <button onClick={()=>{setSearch('');setStatus('ALL');setMethod('ALL');setDateFrom('');setDateTo('');}}
-            style={{background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.2)',color:'#ef4444',padding:'8px 14px',borderRadius:9,fontSize:12,cursor:'pointer',fontWeight:600}}>✕ Clear</button>
+            style={{background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.2)',color:'#ef4444',padding:'8px 14px',borderRadius:9,fontSize:12,cursor:'pointer',fontWeight:600}}>
+            Clear
+          </button>
         )}
       </div>
 
@@ -117,6 +143,7 @@ export default function OrdersPage() {
                 const sc = STC[o.paymentStatus] || STC.UNPAID;
                 const mc = MTC[o.paymentMethod] || '#94a3b8';
                 const isOpen = expanded === o.id;
+                const isUnpaid = o.paymentStatus !== 'PAID';
                 return (
                   <>
                     <tr key={o.id} style={{borderBottom:'1px solid '+theme.border, background:isOpen?theme.hover:'transparent', cursor:'pointer'}}
@@ -125,9 +152,9 @@ export default function OrdersPage() {
                       <td style={{padding:'11px 14px'}}>
                         <div style={{fontSize:13,fontWeight:600,color:theme.text}}>{o.customer?.name||o.customerName||'Walk-in'}</div>
                         {o.customer?.phone && <div style={{fontSize:11,color:theme.textFaint}}>{o.customer.phone}</div>}
-                        {o.tableNumber && <div style={{fontSize:11,color:theme.textFaint}}>Table {o.tableNumber}</div>}
+                        {o.tableNumber && <div style={{fontSize:11,color:'#38bdf8'}}>Table {o.tableNumber}</div>}
                       </td>
-                      <td style={{padding:'11px 14px',fontSize:13,color:theme.textMuted}}>{o.items?.length??'—'}</td>
+                      <td style={{padding:'11px 14px',fontSize:13,color:theme.textMuted}}>{o.items?.length??'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â'}</td>
                       <td style={{padding:'11px 14px',fontWeight:700,color:theme.text}}>{fmt(o.totalAmount)}</td>
                       <td style={{padding:'11px 14px'}}>
                         <span style={{fontSize:11,fontWeight:700,padding:'2px 9px',borderRadius:20,background:mc+'18',color:mc}}>{o.paymentMethod}</span>
@@ -139,7 +166,15 @@ export default function OrdersPage() {
                         {new Date(o.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}
                         <div style={{fontSize:10}}>{new Date(o.createdAt).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</div>
                       </td>
-                      <td style={{padding:'11px 14px',color:theme.textFaint,fontSize:14}}>{isOpen?'▲':'▼'}</td>
+                      <td style={{padding:'11px 14px'}}>
+                        {isUnpaid && (
+                          <button onClick={e=>{e.stopPropagation();markPaid(o.id);}}
+                            disabled={updating===o.id}
+                            style={{background:'rgba(16,185,129,0.15)',border:'1px solid #10b981',color:'#10b981',padding:'5px 12px',borderRadius:8,fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap',opacity:updating===o.id?0.6:1}}>
+                            {updating===o.id ? '...' : 'Paid'}
+                          </button>
+                        )}
+                      </td>
                     </tr>
                     {isOpen && (
                       <tr key={o.id+'-exp'} style={{borderBottom:'1px solid '+theme.border}}>
@@ -150,16 +185,28 @@ export default function OrdersPage() {
                               <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'5px 0',borderBottom:i<o.items.length-1?'1px solid '+theme.border:'none'}}>
                                 <span style={{fontSize:13,color:theme.text}}>{item.name}</span>
                                 <span style={{fontSize:12,color:theme.textFaint}}>
-                                  {item.quantity} × {fmt(item.unitPrice)} = <b style={{color:theme.text}}>{fmt(item.total||item.unitPrice*item.quantity)}</b>
+                                  {item.quantity} x {fmt(item.unitPrice)} = <b style={{color:theme.text}}>{fmt(item.total||item.unitPrice*item.quantity)}</b>
                                   {item.taxRate>0 && <span style={{color:'#f59e0b',marginLeft:6}}>+{item.taxRate}% GST</span>}
                                 </span>
                               </div>
                             ))}
-                            <div style={{marginTop:8,paddingTop:8,borderTop:'1px solid '+theme.border,display:'flex',gap:20,fontSize:12,color:theme.textFaint}}>
+                            <div style={{marginTop:8,paddingTop:8,borderTop:'1px solid '+theme.border,display:'flex',gap:20,fontSize:12,color:theme.textFaint,flexWrap:'wrap',alignItems:'center'}}>
                               {o.subtotal!=null && <span>Subtotal: <b style={{color:theme.text}}>{fmt(o.subtotal)}</b></span>}
                               {o.taxAmount>0 && <span>Tax: <b style={{color:'#f59e0b'}}>{fmt(o.taxAmount)}</b></span>}
                               {o.discountAmount>0 && <span>Discount: <b style={{color:'#10b981'}}>-{fmt(o.discountAmount)}</b></span>}
-                              {o.notes && <span>Note: <i>{o.notes}</i></span>}
+                              {o.notes && <span>Note: <i style={{color:theme.text}}>{o.notes}</i></span>}
+                            {o.paymentStatus !== 'PAID' && (
+                              <button onClick={() => markPaid(o.id)}
+                                style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid #10b981', color: '#10b981', padding: '5px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                                 Mark as Paid
+                              </button>
+                            )}
+                              {isUnpaid && (
+                                <button onClick={()=>markPaid(o.id)} disabled={updating===o.id}
+                                  style={{background:'rgba(16,185,129,0.15)',border:'1px solid #10b981',color:'#10b981',padding:'6px 16px',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer',marginLeft:'auto',opacity:updating===o.id?0.6:1}}>
+                                  {updating===o.id ? 'Updating...' : 'Mark as Paid'}
+                                </button>
+                              )}
                             </div>
                           </div>
                         </td>
