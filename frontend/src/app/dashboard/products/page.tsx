@@ -93,11 +93,17 @@ export default function ProductsPage() {
     try {
       let imageUrl = form.imageUrl;
       if (imageFile) {
-        const fd = new FormData();
-        fd.append('image', imageFile);
         try {
-          const { data: up } = await api.post('/api/products/upload-image', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-          imageUrl = up.url;
+          const cloudName = 'dwabtf4de';
+          const preset = 'cafe_os_uploads';
+          const fd = new FormData();
+          fd.append('file', imageFile);
+          fd.append('upload_preset', preset);
+          fd.append('folder', 'shop-os/products');
+          const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: 'POST', body: fd });
+          const up = await res.json();
+          if (up.secure_url) imageUrl = up.secure_url;
+          else imageUrl = imagePreview;
         } catch { imageUrl = imagePreview; }
       }
       const body: any = {
@@ -158,7 +164,7 @@ export default function ProductsPage() {
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={() => exportCSV(filtered)}
             style={{ background: theme.hover, border: `1px solid ${theme.border}`, color: theme.textMuted, padding: '10px 16px', borderRadius: 10, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-            ⬇️ Export CSV
+            Ã¢Â¬â€¡Ã¯Â¸Â Export CSV
           </button>
           <button onClick={openAdd}
             style={{ background: 'linear-gradient(135deg,#7c3aed,#3b82f6)', border: 'none', color: 'white', padding: '10px 20px', borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
@@ -184,7 +190,7 @@ export default function ProductsPage() {
 
       {/* Filters */}
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Name, SKU, barcode..."
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Ã°Å¸â€Â Name, SKU, barcode..."
           style={{ ...inp, width: 220, padding: '8px 12px', fontSize: 12 }} />
         <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
           style={{ ...inp, width: 160, padding: '8px 12px', fontSize: 12 }}>
@@ -201,7 +207,7 @@ export default function ProductsPage() {
         {(search || catFilter || stockFilter !== 'ALL') && (
           <button onClick={() => { setSearch(''); setCatFilter(''); setStockFilter('ALL'); }}
             style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', padding: '8px 14px', borderRadius: 9, fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
-            ✕ Clear
+            Ã¢Å“â€¢ Clear
           </button>
         )}
       </div>
@@ -252,18 +258,18 @@ export default function ProductsPage() {
                       <td style={{ padding: '10px 12px', fontWeight: 600, fontSize: 13, color: theme.text }}>{p.name}</td>
                       <td style={{ padding: '10px 12px' }}>
                         {p.sku && <div style={{ fontFamily: 'monospace', fontSize: 11, color: theme.textFaint }}>{p.sku}</div>}
-                        {p.barcode && <div style={{ fontFamily: 'monospace', fontSize: 11, color: '#38bdf8' }}>📦 {p.barcode}</div>}
-                        {!p.sku && !p.barcode && <span style={{ color: theme.textFaint, fontSize: 12 }}>—</span>}
+                        {p.barcode && <div style={{ fontFamily: 'monospace', fontSize: 11, color: '#38bdf8' }}>Ã°Å¸â€œÂ¦ {p.barcode}</div>}
+                        {!p.sku && !p.barcode && <span style={{ color: theme.textFaint, fontSize: 12 }}>Ã¢â‚¬â€</span>}
                       </td>
                       <td style={{ padding: '10px 12px' }}>
                         {p.category?.name
                           ? <span style={{ background: theme.accentBg, color: theme.accent, padding: '2px 9px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>{p.category.name}</span>
-                          : <span style={{ color: theme.textFaint, fontSize: 12 }}>—</span>}
+                          : <span style={{ color: theme.textFaint, fontSize: 12 }}>Ã¢â‚¬â€</span>}
                       </td>
                       <td style={{ padding: '10px 12px', fontSize: 13, color: theme.textMuted }}>{fmt(p.costPrice)}</td>
                       <td style={{ padding: '10px 12px', fontWeight: 700, fontSize: 13, color: theme.text }}>{fmt(p.sellingPrice)}</td>
                       <td style={{ padding: '10px 12px', fontSize: 12, color: Number(p.taxRate) > 0 ? '#f59e0b' : theme.textFaint }}>
-                        {Number(p.taxRate) > 0 ? `${p.taxRate}%` : '—'}
+                        {Number(p.taxRate) > 0 ? `${p.taxRate}%` : 'Ã¢â‚¬â€'}
                       </td>
                       <td style={{ padding: '10px 12px', fontWeight: 700, color: '#10b981' }}>{margin}%</td>
                       <td style={{ padding: '10px 12px', fontWeight: 700, color: isOut ? '#ef4444' : isLow ? '#f59e0b' : theme.text }}>
@@ -294,7 +300,7 @@ export default function ProductsPage() {
           <div style={{ background: theme.card, border: `1px solid ${theme.border}`, borderRadius: 18, padding: 28, width: '100%', maxWidth: 540, marginTop: 10 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
               <div style={{ fontWeight: 800, fontSize: 16, color: theme.text }}>{editing ? 'Edit' : 'Add'} Product</div>
-              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', color: theme.textMuted, cursor: 'pointer', fontSize: 22, lineHeight: 1 }}>×</button>
+              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', color: theme.textMuted, cursor: 'pointer', fontSize: 22, lineHeight: 1 }}>Ãƒâ€”</button>
             </div>
 
             {error && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '10px 14px', color: '#ef4444', fontSize: 13, marginBottom: 14 }}>{error}</div>}
@@ -313,8 +319,8 @@ export default function ProductsPage() {
                     Choose Image
                     <input type="file" accept="image/*" onChange={handleImage} style={{ display: 'none' }} />
                   </label>
-                  <p style={{ fontSize: 11, color: theme.textFaint, marginTop: 5 }}>JPG, PNG, WEBP · or paste URL below</p>
-                  {imageFile && <p style={{ fontSize: 11, color: '#10b981', marginTop: 3 }}>✓ {imageFile.name}</p>}
+                  <p style={{ fontSize: 11, color: theme.textFaint, marginTop: 5 }}>JPG, PNG, WEBP Ã‚Â· or paste URL below</p>
+                  {imageFile && <p style={{ fontSize: 11, color: '#10b981', marginTop: 3 }}>Ã¢Å“â€œ {imageFile.name}</p>}
                 </div>
               </div>
             </div>
@@ -330,7 +336,7 @@ export default function ProductsPage() {
               <div style={{ gridColumn: 'span 2' }}>
                 <label style={lbl}>Category</label>
                 <select value={form.categoryId} onChange={e => setForm(v => ({ ...v, categoryId: e.target.value }))} style={inp}>
-                  <option value="">— No category —</option>
+                  <option value="">Ã¢â‚¬â€ No category Ã¢â‚¬â€</option>
                   {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
